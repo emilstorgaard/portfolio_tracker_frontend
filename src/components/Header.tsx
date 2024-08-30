@@ -1,15 +1,34 @@
-"use client"
+"use client";
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { logout } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 
 export function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [session, setSession] = useState(null);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
     };
+
+    const handleLogout = async (e: React.FormEvent) => {
+        e.preventDefault();
+        toggleMenu();
+        await logout();
+        setSession(null); // Update the session state
+    };
+
+    useEffect(() => {
+        const fetchSession = async () => {
+            const currentSession = await getSession();
+            setSession(currentSession);
+        };
+
+        fetchSession();
+    }, []);
 
     return (
         <header className="mb-10">
@@ -20,7 +39,14 @@ export function Header() {
                 </Link>
 
                 <div className="hidden lg:flex items-center space-x-6">
-                    <Link href="/#" className="py-2 px-4 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition duration-200">Create Portfolio</Link>
+                    {session ? (
+                        <>
+                            <Link href="/portfolios/create" className="py-2 px-4 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition duration-200">Create Portfolio</Link>
+                            <button onClick={handleLogout} className="py-2 px-4 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition duration-200">Logout</button>
+                        </>
+                    ) : (
+                        <Link href="/login" className="py-2 px-4 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition duration-200">Login</Link>
+                    )}
                 </div>
 
                 <button
@@ -52,7 +78,7 @@ export function Header() {
                 <div className="fixed inset-y-0 right-0 z-20 w-full max-w-xs overflow-y-auto bg-white shadow-lg px-6 py-6 sm:ring-1 sm:ring-gray-900/10">
                     <div className="flex items-center justify-between">
                         <Link href="/" className="-m-1.5 p-1.5">
-                            <Image className="h-8 w-auto" src="/img/box.png" width={500} height={500} alt="" />
+                            <Image className="h-8 w-auto" src="/img/logo.png" width={500} height={500} alt="" />
                         </Link>
                         <button type="button" className="-m-2.5 rounded-md p-2.5 text-gray-700" onClick={toggleMenu}>
                             <svg
@@ -71,7 +97,12 @@ export function Header() {
                     </div>
                     <div className="mt-6">
                         <div className="space-y-4">
-                            <Link href="#" onClick={toggleMenu} className="block py-2 px-4 text-center text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition duration-200">Create Portfolio</Link>
+                            <Link href="/portfolios/create" onClick={toggleMenu} className="block py-2 px-4 text-center text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition duration-200">Create Portfolio</Link>
+                            {session ? (
+                                <Link href="/" onClick={handleLogout} className="block py-2 px-4 text-center text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition duration-200">Logout</Link>
+                            ) : (
+                                <Link href="/login" onClick={toggleMenu} className="block py-2 px-4 text-center text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition duration-200">Login</Link>
+                            )}
                         </div>
                     </div>
                 </div>
